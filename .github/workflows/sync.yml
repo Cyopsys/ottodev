@@ -49,7 +49,7 @@ jobs:
       # Step 5: Install dependencies using pnpm
       - name: Install dependencies
         run: |
-          npm install -g pnpm
+          # npm install -g pnpm
           pnpm install
 
       # Step 6: Build the project (using whatever build tool, like Vite, Remix)
