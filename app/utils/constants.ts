@@ -457,9 +457,8 @@ async function getLMStudioModels(): Promise<ModelInfo[]> {
     }
 
     const response = await fetch(`${baseUrl}/v1/models`);
-	// const data = (await response.json()) as any;
-    const data = await response.json();  // No need to cast here if you're using TypeScript
-
+	const data = (await response.json()) as any;
+    
     return data.data.map((model: any) => ({
       name: model.id,
       label: model.id,
