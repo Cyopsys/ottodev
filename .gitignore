@@ -37,4 +37,3 @@ modelfiles
 # docs ignore
 site
 .tool-versions
-sync.yml
