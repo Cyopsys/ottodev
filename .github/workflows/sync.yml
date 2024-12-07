@@ -55,9 +55,9 @@ jobs:
           pnpm install
 
       # Step 6: Build the project (using whatever build tool, like Vite, Remix)
-      - name: Build project
-        run: |
-          pnpm run build
+      #- name: Build project
+      #  run: |
+      #    pnpm run build
 
       # Step 7: Deploy to Cloudflare Pages
       - name: Deploy to Cloudflare Pages
