@@ -122,14 +122,14 @@ export const Artifact = memo(({ messageId }: ArtifactProps) => {
 });
 
 interface ShellCodeBlockProps {
-  className?: string;
+  classsName?: string;
   code: string;
 }
 
-function ShellCodeBlock({ className, code }: ShellCodeBlockProps) {
+function ShellCodeBlock({ classsName, code }: ShellCodeBlockProps) {
   return (
     <div
-      className={classNames('text-xs', className)}
+      className={classNames('text-xs', classsName)}
       dangerouslySetInnerHTML={{
         __html: shellHighlighter.codeToHtml(code, {
           lang: 'shell',
@@ -222,7 +222,7 @@ const ActionList = memo(({ actions }: ActionListProps) => {
               </div>
               {(type === 'shell' || type === 'start') && (
                 <ShellCodeBlock
-                  className={classNames('mt-1', {
+                  classsName={classNames('mt-1', {
                     'mb-3.5': !isLast,
                   })}
                   code={content}
