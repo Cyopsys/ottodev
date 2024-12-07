@@ -14,18 +14,8 @@ const PROVIDER_LIST: ProviderInfo[] = [
   {
     name: 'Anthropic',
     staticModels: [
-      {
-        name: 'claude-3-5-sonnet-latest',
-        label: 'Claude 3.5 Sonnet (new)',
-        provider: 'Anthropic',
-        maxTokenAllowed: 8000,
-      },
-      {
-        name: 'claude-3-5-sonnet-20240620',
-        label: 'Claude 3.5 Sonnet (old)',
-        provider: 'Anthropic',
-        maxTokenAllowed: 8000,
-      },
+      { name: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet (new)', provider: 'Anthropic', maxTokenAllowed: 8000, },
+      { name: 'claude-3-5-sonnet-20240620', label: 'Claude 3.5 Sonnet (old)', provider: 'Anthropic', maxTokenAllowed: 8000, },
       {
         name: 'claude-3-5-haiku-latest',
         label: 'Claude 3.5 Haiku (new)',
@@ -366,13 +356,11 @@ const getOllamaBaseUrl = () => {
 };
 
 async function getOllamaModels(): Promise<ModelInfo[]> {
-  /*
-   * if (typeof window === 'undefined') {
-   * return [];
-   * }
-   */
-
   try {
+    if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+
     const baseUrl = getOllamaBaseUrl();
     const response = await fetch(`${baseUrl}/api/tags`);
     const data = (await response.json()) as OllamaApiResponse;

@@ -22,15 +22,13 @@ jobs:
       # Step 2: Setting up Git
       - name: Set up Git
         run: |
-          git config --global user.name "${{ github.actor }}"
-          # git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+          # git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
           git config --global user.email "micheal.l.c.kinney@gmail.com"
           
       # Step 2: Push Changes to Fork
       - name: Push Changes to Fork
         run: |
-          # git push ${{ github.actor }}:${{ secrets.TESTING }} https://${{ github.actor }}@github.com/{{ github.repository }}.git
-          # git push https://${{ github.actor }}:${{ secrets.TESTING }}@github.com/${{ github.repository }}.git main
           git remote set-url origin https://${{ secrets.TESTING }}@github.com/${{ github.repository }}.git
           git push origin main
 
@@ -54,7 +52,7 @@ jobs:
       #    npm install -g pnpm
       #    pnpm install
 
-      # Step 6: Build the project (using whatever build tool, like Vite, Remix)
+      # Step 6: Builds the project
       #- name: Build project
       #  run: |
       #    pnpm run build
