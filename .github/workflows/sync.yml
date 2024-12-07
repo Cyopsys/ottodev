@@ -29,6 +29,8 @@ jobs:
       # Step 2: Push Changes to Fork
       - name: Push Changes to Fork
         run: |
+          # git push ${{ github.actor }}:${{ secrets.TESTING }} https://${{ github.actor }}@github.com/{{ github.repository }}.git
+          # git push https://${{ github.actor }}:${{ secrets.TESTING }}@github.com/${{ github.repository }}.git main
           git remote set-url origin https://${{ secrets.TESTING }}@github.com/${{ github.repository }}.git
           git push origin main
 
