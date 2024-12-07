@@ -229,10 +229,10 @@ async function getTogetherModels(apiKeys?: Record<string, string>): Promise<Mode
 }
 
 const getOllamaBaseUrl = () => {
-  const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || 'http://localhost:11434';
+  const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || '';
 
   // Check if we're in the browser
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' || defaultBaseUrl!) {
     // Frontend always uses localhost
     return defaultBaseUrl;
   }
@@ -244,14 +244,12 @@ const getOllamaBaseUrl = () => {
 };
 
 async function getOllamaModels(): Promise<ModelInfo[]> {
-  /*
-   * if (typeof window === 'undefined') {
-   * return [];
-   * }
-   */
-
   try {
     const baseUrl = getOllamaBaseUrl();
+    if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+    
     const response = await fetch(`${baseUrl}/api/tags`);
     const data = (await response.json()) as OllamaApiResponse;
 
@@ -276,6 +274,10 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
     }
 
     let apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
+
+    if (!apiKey) {
+      return [];
+    }
 
     const apikeys = JSON.parse(Cookies.get('apiKeys') || '{}');
 
@@ -335,12 +337,12 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 }
 
 async function getLMStudioModels(): Promise<ModelInfo[]> {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
   try {
-    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';
+    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || '';
+    if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+    
     const response = await fetch(`${baseUrl}/v1/models`);
     const data = (await response.json()) as any;
 
