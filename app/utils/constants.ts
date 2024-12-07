@@ -361,11 +361,12 @@ const getOllamaBaseUrl = () => {
 
 async function getOllamaModels(): Promise<ModelInfo[]> {
   try {
-    if (typeof window === 'undefined' || !baseUrl) {
+    const baseUrl = getOllamaBaseUrl();
+	
+	if (typeof window === 'undefined' || !baseUrl) {
       return [];
     }
 
-    const baseUrl = getOllamaBaseUrl();
     const response = await fetch(`${baseUrl}/api/tags`);
     const data = (await response.json()) as OllamaApiResponse;
 
@@ -450,13 +451,14 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 
 async function getLMStudioModels(): Promise<ModelInfo[]> {
   try {
+    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';  // Declare it earlier
     if (typeof window === 'undefined' || !baseUrl) {
       return [];
     }
 
-    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';
     const response = await fetch(`${baseUrl}/v1/models`);
-    const data = (await response.json()) as any;
+	// const data = (await response.json()) as any;
+    const data = await response.json();  // No need to cast here if you're using TypeScript
 
     return data.data.map((model: any) => ({
       name: model.id,
