@@ -1,3 +1,4 @@
+import Cookies from 'js-cookie';
 import type { ModelInfo, OllamaApiResponse, OllamaModel } from './types';
 import type { ProviderInfo } from '~/types/model';
 
@@ -13,18 +14,8 @@ const PROVIDER_LIST: ProviderInfo[] = [
   {
     name: 'Anthropic',
     staticModels: [
-      {
-        name: 'claude-3-5-sonnet-latest',
-        label: 'Claude 3.5 Sonnet (new)',
-        provider: 'Anthropic',
-        maxTokenAllowed: 8000,
-      },
-      {
-        name: 'claude-3-5-sonnet-20240620',
-        label: 'Claude 3.5 Sonnet (old)',
-        provider: 'Anthropic',
-        maxTokenAllowed: 8000,
-      },
+      { name: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet (new)', provider: 'Anthropic', maxTokenAllowed: 8000, },
+      { name: 'claude-3-5-sonnet-20240620', label: 'Claude 3.5 Sonnet (old)', provider: 'Anthropic', maxTokenAllowed: 8000, },
       {
         name: 'claude-3-5-haiku-latest',
         label: 'Claude 3.5 Haiku (new)',
@@ -262,6 +253,7 @@ const PROVIDER_LIST: ProviderInfo[] = [
   },
   {
     name: 'Together',
+    getDynamicModels: getTogetherModels,
     staticModels: [
       {
         name: 'Qwen/Qwen2.5-Coder-32B-Instruct',
@@ -293,13 +285,81 @@ const staticModels: ModelInfo[] = PROVIDER_LIST.map((p) => p.staticModels).flat(
 
 export let MODEL_LIST: ModelInfo[] = [...staticModels];
 
+export async function getModelList(apiKeys: Record<string, string>) {
+  MODEL_LIST = [
+    ...(
+      await Promise.all(
+        PROVIDER_LIST.filter(
+          (p): p is ProviderInfo & { getDynamicModels: () => Promise<ModelInfo[]> } => !!p.getDynamicModels,
+        ).map((p) => p.getDynamicModels(apiKeys)),
+      )
+    ).flat(),
+    ...staticModels,
+  ];
+  return MODEL_LIST;
+}
+
+// Function to check if a URL is reachable
+async function isUrlReachable(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function getTogetherModels(apiKeys?: Record<string, string>): Promise<ModelInfo[]> {
+  try {
+    const baseUrl = import.meta.env.TOGETHER_API_BASE_URL || '';
+    
+	if (typeof window === 'undefined' || !baseUrl) {
+	  // if (typeof window !== 'undefined' || !baseUrl) {
+      return [];
+    }
+	
+    const provider = 'Together';
+    let apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
+
+    if (apiKeys && apiKeys[provider]) {
+      apiKey = apiKeys[provider];
+    }
+
+    if (!apiKey) {
+      return [];
+    }
+
+    const response = await fetch(`${baseUrl}/models`, {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+    // const res = (await response.json()) as any;
+	const data = await response.json();  // No need to cast here if you're using TypeScript
+    const data: any[] = (res || []).filter((model: any) => model.type == 'chat');
+
+    return data.map((m: any) => ({
+      name: m.id,
+      label: `${m.display_name} - in:$${m.pricing.input.toFixed(
+        2,
+      )} out:$${m.pricing.output.toFixed(2)} - context ${Math.floor(m.context_length / 1000)}k`,
+      provider,
+      maxTokenAllowed: 8000,
+    }));
+  } catch (e) {
+    console.error('Error getting OpenAILike models:', e);
+    return [];
+  }
+}
+
 const getOllamaBaseUrl = () => {
   const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || 'http://localhost:11434';
 
   // Check if we're in the browser
-  if (typeof window !== 'undefined') {
+  if (typeof window === 'undefined' || !defaultBaseUrl) {
+    // if (typeof window !== 'undefined') {
     // Frontend always uses localhost
-    return defaultBaseUrl;
+     return [];
   }
 
   // Backend: Check if we're running in Docker
@@ -309,14 +369,14 @@ const getOllamaBaseUrl = () => {
 };
 
 async function getOllamaModels(): Promise<ModelInfo[]> {
-  
-  if (typeof window === 'undefined') {
-	return [];
-  }
-  
-
   try {
     const baseUrl = getOllamaBaseUrl();
+	
+	if (typeof window === 'undefined' || !baseUrl) {
+	  // if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+
     const response = await fetch(`${baseUrl}/api/tags`);
     const data = (await response.json()) as OllamaApiResponse;
 
@@ -340,7 +400,14 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
       return [];
     }
 
-    const apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
+    let apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
+
+    const apikeys = JSON.parse(Cookies.get('apiKeys') || '{}');
+
+    if (apikeys && apikeys.OpenAILike) {
+      apiKey = apikeys.OpenAILike;
+    }
+
     const response = await fetch(`${baseUrl}/models`, {
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -393,14 +460,15 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 }
 
 async function getLMStudioModels(): Promise<ModelInfo[]> {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
   try {
-    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';
+    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';  // Declare it earlier
+    if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+
     const response = await fetch(`${baseUrl}/v1/models`);
-    const data = (await response.json()) as any;
+	// const data = (await response.json()) as any;
+    const data = await response.json();  // No need to cast here if you're using TypeScript
 
     return data.data.map((model: any) => ({
       name: model.id,
@@ -414,16 +482,36 @@ async function getLMStudioModels(): Promise<ModelInfo[]> {
 }
 
 async function initializeModelList(): Promise<ModelInfo[]> {
+  let apiKeys: Record<string, string> = {};
+
+  try {
+    const storedApiKeys = Cookies.get('apiKeys');
+
+    if (!storedApiKeys) {
+      return [];
+    }
+
+    if (storedApiKeys) {
+      const parsedKeys = JSON.parse(storedApiKeys);
+
+      if (typeof parsedKeys === 'object' && parsedKeys !== null) {
+        apiKeys = parsedKeys;
+      }
+    }
+  } catch (error: any) {
+    console.warn(`Failed to fetch apikeys from cookies:${error?.message}`);
+  }
   MODEL_LIST = [
     ...(
       await Promise.all(
         PROVIDER_LIST.filter(
           (p): p is ProviderInfo & { getDynamicModels: () => Promise<ModelInfo[]> } => !!p.getDynamicModels,
-        ).map((p) => p.getDynamicModels()),
+        ).map((p) => p.getDynamicModels(apiKeys)),
       )
     ).flat(),
     ...staticModels,
   ];
+
   return MODEL_LIST;
 }
 
