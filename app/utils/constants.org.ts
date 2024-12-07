@@ -14,8 +14,18 @@ const PROVIDER_LIST: ProviderInfo[] = [
   {
     name: 'Anthropic',
     staticModels: [
-      { name: 'claude-3-5-sonnet-latest', label: 'Claude 3.5 Sonnet (new)', provider: 'Anthropic', maxTokenAllowed: 8000, },
-      { name: 'claude-3-5-sonnet-20240620', label: 'Claude 3.5 Sonnet (old)', provider: 'Anthropic', maxTokenAllowed: 8000, },
+      {
+        name: 'claude-3-5-sonnet-latest',
+        label: 'Claude 3.5 Sonnet (new)',
+        provider: 'Anthropic',
+        maxTokenAllowed: 8000,
+      },
+      {
+        name: 'claude-3-5-sonnet-20240620',
+        label: 'Claude 3.5 Sonnet (old)',
+        provider: 'Anthropic',
+        maxTokenAllowed: 8000,
+      },
       {
         name: 'claude-3-5-haiku-latest',
         label: 'Claude 3.5 Haiku (new)',
@@ -299,26 +309,15 @@ export async function getModelList(apiKeys: Record<string, string>) {
   return MODEL_LIST;
 }
 
-// Function to check if a URL is reachable
-async function isUrlReachable(url: string): Promise<boolean> {
-  try {
-    const response = await fetch(url, { method: 'HEAD' });
-    return response.ok;
-  } catch (e) {
-    return false;
-  }
-}
-
 async function getTogetherModels(apiKeys?: Record<string, string>): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.TOGETHER_API_BASE_URL || '';
-    
-	if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl)) {
-	  // if (typeof window !== 'undefined' || !baseUrl) {
+    const provider = 'Together';
+
+    if (!baseUrl) {
       return [];
     }
-	
-    const provider = 'Together';
+
     let apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
 
     if (apiKeys && apiKeys[provider]) {
@@ -334,8 +333,7 @@ async function getTogetherModels(apiKeys?: Record<string, string>): Promise<Mode
         Authorization: `Bearer ${apiKey}`,
       },
     });
-    // const res = (await response.json()) as any;
-	const data = await response.json();  // No need to cast here if you're using TypeScript
+    const res = (await response.json()) as any;
     const data: any[] = (res || []).filter((model: any) => model.type == 'chat');
 
     return data.map((m: any) => ({
@@ -356,10 +354,9 @@ const getOllamaBaseUrl = () => {
   const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || 'http://localhost:11434';
 
   // Check if we're in the browser
-  if (typeof window === 'undefined' || !defaultBaseUrl || !isUrlReachable(defaultBaseUrl)) {
-    // if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined') {
     // Frontend always uses localhost
-     return [];
+    return defaultBaseUrl;
   }
 
   // Backend: Check if we're running in Docker
@@ -369,14 +366,14 @@ const getOllamaBaseUrl = () => {
 };
 
 async function getOllamaModels(): Promise<ModelInfo[]> {
+  /*
+   * if (typeof window === 'undefined') {
+   * return [];
+   * }
+   */
+
   try {
     const baseUrl = getOllamaBaseUrl();
-	
-	if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl)) {
-	  // if (typeof window === 'undefined' || !baseUrl) {
-      return [];
-    }
-
     const response = await fetch(`${baseUrl}/api/tags`);
     const data = (await response.json()) as OllamaApiResponse;
 
@@ -396,7 +393,7 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.OPENAI_LIKE_API_BASE_URL || '';
 
-    if (!baseUrl || !isUrlReachable(baseUrl)) {
+    if (!baseUrl) {
       return [];
     }
 
@@ -460,15 +457,14 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 }
 
 async function getLMStudioModels(): Promise<ModelInfo[]> {
-  try {
-    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';  // Declare it earlier
-    if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl) {
-      return [];
-    }
+  if (typeof window === 'undefined') {
+    return [];
+  }
 
+  try {
+    const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';
     const response = await fetch(`${baseUrl}/v1/models`);
-	// const data = (await response.json()) as any;
-    const data = await response.json();  // No need to cast here if you're using TypeScript
+    const data = (await response.json()) as any;
 
     return data.data.map((model: any) => ({
       name: model.id,
@@ -486,10 +482,6 @@ async function initializeModelList(): Promise<ModelInfo[]> {
 
   try {
     const storedApiKeys = Cookies.get('apiKeys');
-
-    if (!storedApiKeys) {
-      return [];
-    }
 
     if (storedApiKeys) {
       const parsedKeys = JSON.parse(storedApiKeys);
