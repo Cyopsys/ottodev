@@ -313,7 +313,7 @@ async function getTogetherModels(apiKeys?: Record<string, string>): Promise<Mode
   try {
     const baseUrl = import.meta.env.TOGETHER_API_BASE_URL || '';
     
-	if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl))) {
+	if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl)) {
 	  // if (typeof window !== 'undefined' || !baseUrl) {
       return [];
     }
@@ -356,7 +356,7 @@ const getOllamaBaseUrl = () => {
   const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || 'http://localhost:11434';
 
   // Check if we're in the browser
-  if (typeof window === 'undefined' || !defaultBaseUrl || !(await isUrlReachable(defaultBaseUrl))) {
+  if (typeof window === 'undefined' || !defaultBaseUrl || !isUrlReachable(defaultBaseUrl)) {
     // if (typeof window !== 'undefined') {
     // Frontend always uses localhost
      return [];
@@ -372,7 +372,7 @@ async function getOllamaModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = getOllamaBaseUrl();
 	
-	if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl))) {
+	if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl)) {
 	  // if (typeof window === 'undefined' || !baseUrl) {
       return [];
     }
@@ -396,7 +396,7 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.OPENAI_LIKE_API_BASE_URL || '';
 
-    if (!baseUrl || !(await isUrlReachable(baseUrl)) {
+    if (!baseUrl || !isUrlReachable(baseUrl) {
       return [];
     }
 
@@ -462,7 +462,7 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 async function getLMStudioModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';  // Declare it earlier
-    if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl)) {
+    if (typeof window === 'undefined' || !baseUrl || !isUrlReachable(baseUrl) {
       return [];
     }
 
