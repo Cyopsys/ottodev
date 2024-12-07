@@ -299,11 +299,22 @@ export async function getModelList(apiKeys: Record<string, string>) {
   return MODEL_LIST;
 }
 
+// Function to check if a URL is reachable
+async function isUrlReachable(url: string): Promise<boolean> {
+  try {
+    const response = await fetch(url, { method: 'HEAD' });
+    return response.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function getTogetherModels(apiKeys?: Record<string, string>): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.TOGETHER_API_BASE_URL || '';
     
-	if (typeof window !== 'undefined' || !baseUrl) {
+	if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl))) {
+	  // if (typeof window !== 'undefined' || !baseUrl) {
       return [];
     }
 	
@@ -323,7 +334,8 @@ async function getTogetherModels(apiKeys?: Record<string, string>): Promise<Mode
         Authorization: `Bearer ${apiKey}`,
       },
     });
-    const res = (await response.json()) as any;
+    // const res = (await response.json()) as any;
+	const data = await response.json();  // No need to cast here if you're using TypeScript
     const data: any[] = (res || []).filter((model: any) => model.type == 'chat');
 
     return data.map((m: any) => ({
@@ -344,12 +356,9 @@ const getOllamaBaseUrl = () => {
   const defaultBaseUrl = import.meta.env.OLLAMA_API_BASE_URL || 'http://localhost:11434';
 
   // Check if we're in the browser
-  if (typeof window !== 'undefined') {
+  if (typeof window === 'undefined' || !defaultBaseUrl || !(await isUrlReachable(defaultBaseUrl))) {
+    // if (typeof window !== 'undefined') {
     // Frontend always uses localhost
-    return defaultBaseUrl;
-  }
-  
-  if (!defaultBaseUrl) {
      return [];
   }
 
@@ -363,7 +372,8 @@ async function getOllamaModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = getOllamaBaseUrl();
 	
-	if (typeof window === 'undefined' || !baseUrl) {
+	if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl))) {
+	  // if (typeof window === 'undefined' || !baseUrl) {
       return [];
     }
 
@@ -386,7 +396,7 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.OPENAI_LIKE_API_BASE_URL || '';
 
-    if (!baseUrl) {
+    if (!baseUrl || !(await isUrlReachable(baseUrl)) {
       return [];
     }
 
@@ -452,13 +462,14 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 async function getLMStudioModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';  // Declare it earlier
-    if (typeof window === 'undefined' || !baseUrl) {
+    if (typeof window === 'undefined' || !baseUrl || !(await isUrlReachable(baseUrl)) {
       return [];
     }
 
     const response = await fetch(`${baseUrl}/v1/models`);
-	const data = (await response.json()) as any;
-    
+	// const data = (await response.json()) as any;
+    const data = await response.json();  // No need to cast here if you're using TypeScript
+
     return data.data.map((model: any) => ({
       name: model.id,
       label: model.id,
@@ -475,6 +486,10 @@ async function initializeModelList(): Promise<ModelInfo[]> {
 
   try {
     const storedApiKeys = Cookies.get('apiKeys');
+
+    if (!storedApiKeys) {
+      return [];
+    }
 
     if (storedApiKeys) {
       const parsedKeys = JSON.parse(storedApiKeys);
