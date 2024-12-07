@@ -49,14 +49,14 @@ jobs:
       # Step 5: Install dependencies using pnpm
       - name: Install dependencies
         run: |
-          # npm install -g pnpm
-          npm install pnpm
+          rm -rf node_modules
+          rm pnpm-lock.yaml
+          npm install -g pnpm
           pnpm install
 
       # Step 6: Build the project (using whatever build tool, like Vite, Remix)
       - name: Build project
         run: |
-          npm install pnpm
           pnpm run build
 
       # Step 7: Deploy to Cloudflare Pages
