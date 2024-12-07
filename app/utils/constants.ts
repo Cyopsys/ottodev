@@ -302,12 +302,12 @@ export async function getModelList(apiKeys: Record<string, string>) {
 async function getTogetherModels(apiKeys?: Record<string, string>): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.TOGETHER_API_BASE_URL || '';
-    const provider = 'Together';
-
-    if (!baseUrl) {
+    
+	if (typeof window !== 'undefined' || !baseUrl) {
       return [];
     }
-
+	
+    const provider = 'Together';
     let apiKey = import.meta.env.OPENAI_LIKE_API_KEY ?? '';
 
     if (apiKeys && apiKeys[provider]) {
@@ -347,6 +347,10 @@ const getOllamaBaseUrl = () => {
   if (typeof window !== 'undefined') {
     // Frontend always uses localhost
     return defaultBaseUrl;
+  }
+  
+  if (!defaultBaseUrl) {
+     return [];
   }
 
   // Backend: Check if we're running in Docker
@@ -445,11 +449,11 @@ async function getOpenRouterModels(): Promise<ModelInfo[]> {
 }
 
 async function getLMStudioModels(): Promise<ModelInfo[]> {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-
   try {
+    if (typeof window === 'undefined' || !baseUrl) {
+      return [];
+    }
+
     const baseUrl = import.meta.env.LMSTUDIO_API_BASE_URL || 'http://localhost:1234';
     const response = await fetch(`${baseUrl}/v1/models`);
     const data = (await response.json()) as any;
