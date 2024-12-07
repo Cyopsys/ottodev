@@ -49,8 +49,8 @@ jobs:
       # Step 5: Install dependencies using pnpm
       - name: Install dependencies
         run: |
-          rm -rf node_modules
-          rm pnpm-lock.yaml
+          #rm -rf node_modules
+          #rm pnpm-lock.yaml
           npm install -g pnpm
           pnpm install
 
