@@ -396,7 +396,7 @@ async function getOpenAILikeModels(): Promise<ModelInfo[]> {
   try {
     const baseUrl = import.meta.env.OPENAI_LIKE_API_BASE_URL || '';
 
-    if (!baseUrl || !isUrlReachable(baseUrl)) {
+    if (!baseUrl || !isUrlReachable(baseUrl) {
       return [];
     }
 
